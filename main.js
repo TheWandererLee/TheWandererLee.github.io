@@ -3,7 +3,8 @@
         blockElement: document.createElement('div'),
         sizeInPixels: [320, 640],
         size: [10, 20],
-        currentPosition: [0, 0]
+        currentPosition: [0, 0],
+        backgroundColor: '#000'
     }
 
     const Pieces = {
@@ -44,7 +45,8 @@
         }
     };
 
-    window.addEventListener('load', () => {
+    window.addEventListener('load', () =>
+    {
         Board.element = document.getElementById('board');
 
         Board.style();
@@ -55,7 +57,8 @@
         drawBoard();
     })
 
-    Board.style = () => {
+    Board.style = () =>
+    {
         Board.element.style.width = Board.sizeInPixels[0] + "px";
         Board.element.style.height = Board.sizeInPixels[1] + "px";
         Board.element.style.backgroundColor = "#DDD";
@@ -65,41 +68,32 @@
         Board.blockElement.style.height = (Board.sizeInPixels[1] / Board.size[1]) + "px";
     }
 
-    const createPiece = (piece, x = 0, y = 0) => {
-        let p = selectRandomPiece();
-        
-        Board.grid[4][5].element.style.backgroundColor = '#00F';
+    const createPiece = (x = 0, y = 0) =>
+    {
+        let piece = selectRandomPiece();
 
-        for(let dat of p.data) {
-            Board.grid[x + dat[0]][y + dat[1]] =
-                {...Board.grid[x + dat[0]][y + dat[1]], ...p};
-                console.log(Board.grid[x + dat[0]][y + dat[1]]);
+        // Combine all colliding cells
+        for(let dat of piece.data)
+        {
+            let cellX = x + dat[0]; let cellY = y + dat[1];
+            Board.grid[cellX][cellY] = { ...Board.grid[cellX][cellY], piece };
+            console.log(Board.grid[cellX][cellY]);
         }
+        
     }
 
     // Return random item from Pieces. Use Math.floor for uniform distribution
-    const selectRandomPiece = () => {
+    const selectRandomPiece = () =>
+    {
         const keys = Object.keys(Pieces);
         return Pieces[ keys[ Math.floor( Math.random() * keys.length ) ] ];
     }
 
-    const initGrid = () => {
+    const initGrid = () =>
+    {
         Board.element.innerHTML = '';
 
-        // Create multidimensional array from Board.size and set all values to a empty objects
-        /*Board.grid = Array.from(
-            Array(Board.size[0]),
-            () => new Array(Board.size[1]).fill( {} )
-        );*/
-
-        Board.grid = [];
-        for (let xx=0;xx<Board.size[0]; ++xx) {
-            Board.grid[xx] = [];
-            for (let yy=0;yy<Board.size[1]; ++yy) {
-                Board.grid[xx][yy] = {};
-            }
-        }
-
+        Board.grid = createFilled2dArray();
 
         // Output grid contents as a filled or empty BlockChar
         for (let yy=0; yy<Board.size[1]; ++yy) {
@@ -112,17 +106,33 @@
             }
             Board.element.appendChild( document.createElement('br') );
         }
-
-        console.log(Board.grid);
     }
 
-    const drawBoard = () => {
-
+    const drawBoard = () =>
+    {
         // Output grid contents as a filled or empty BlockChar
         for (let yy=0; yy<Board.size[1]; ++yy) {
             for (let xx=0; xx<Board.size[0]; ++xx) {
-                    Board.grid[xx][yy].element.style.backgroundColor = Board.grid[xx][yy].color;
+                if (Board.grid[xx][yy].hasOwnProperty('piece')) {
+                    Board.grid[xx][yy].element.style.backgroundColor = Board.grid[xx][yy].piece.color;
+                } else {
+                    Board.grid[xx][yy].element.style.backgroundColor = Board.backgroundColor;
+                }
             }
         }
+    }
+
+    // Use this to clone objects, Array.fill() only copies the reference
+    // Default creates multidimensional array from Board.size and set all values to empty objects
+    const createFilled2dArray = (size1 = Board.size[0], size2 = Board.size[1], fill = {}) =>
+    {
+        let array2d = [];
+        for (let xx = 0; xx < size1; ++xx) {
+            array2d[xx] = [];
+            for (let yy = 0; yy < size2; ++yy) {
+                array2d[xx][yy] = {...fill};
+            }
+        }
+        return array2d;
     }
 })()

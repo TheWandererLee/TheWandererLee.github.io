@@ -1,5 +1,4 @@
 #board > div {
-    background-color: #000;
     float: left;
     line-height: 24px;
     outline: 1px solid blue;
