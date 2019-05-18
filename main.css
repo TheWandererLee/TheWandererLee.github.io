@@ -1,0 +1,19 @@
+#board > div {
+    background-color: #000;
+    float: left;
+    line-height: 24px;
+    outline: 1px solid blue;
+}
+
+#board {
+    line-height: 24px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    margin: 16px;
+}
