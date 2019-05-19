@@ -3,7 +3,8 @@
         blockElement: document.createElement('div'),
         sizeInPixels: [320, 640],
         size: [10, 20],
-        currentPosition: [0, 0],
+        currentPosition: [3, 2],
+        currentPiece: 'T',
         backgroundColor: '#000'
     }
 
@@ -51,10 +52,9 @@
 
         Board.style();
         initGrid();
-
-        createPiece(3, 2);
         
-        drawBoard();
+        requestAnimationFrame(drawBoard);
+        setInterval(dropCursor, 100);
     })
 
     Board.style = () =>
@@ -108,8 +108,19 @@
         }
     }
 
+    const dropCursor = () => {
+        ++Board.currentPosition[1];
+        if (Board.currentPosition[1] > 20) {
+            Board.currentPosition[1] = 0;
+            Board.currentPosition[0] = Math.floor(Math.random() * 7);
+        }
+    }
+
     const drawBoard = () =>
     {
+        initGrid();
+        createPiece(Board.currentPosition[0], Board.currentPosition[1]);
+
         // Output grid contents as a filled or empty BlockChar
         for (let yy=0; yy<Board.size[1]; ++yy) {
             for (let xx=0; xx<Board.size[0]; ++xx) {
@@ -120,6 +131,8 @@
                 }
             }
         }
+
+        requestAnimationFrame(drawBoard);
     }
 
     // Use this to clone objects, Array.fill() only copies the reference
