@@ -4,8 +4,10 @@
         sizeInPixels: [320, 640],
         size: [10, 20],
         currentPosition: [3, 2],
-        currentPiece: 'T',
-        backgroundColor: '#000'
+        backgroundColor: '#000',
+        standardDropSpeed: 1000,
+        quickDropSpeed: 100,
+        keys: {}
     }
 
     const Pieces = {
@@ -52,9 +54,56 @@
 
         Board.style();
         initGrid();
-        
+
         requestAnimationFrame(drawBoard);
-        setInterval(dropCursor, 100);
+        setInterval(dropCursor, Board.standardDropSpeed);
+        setInterval(quickMoveCursor, Board.quickDropSpeed);
+    })
+
+    window.addEventListener('keydown', (e) =>
+    {
+        Board.keys[e.keyCode] = true;
+        switch (e.keyCode) {
+            case 37: // Left
+                //--Board.currentPosition[0];
+                if (!Board.keys[37]) {
+                    //clearTimeout(Board.dropTimeout);
+                    //Board.keys[37] = true;
+                    //Board.dropTimeout = setTimeout(dropCursor, Board.quickDropSpeed);
+                }
+                break;
+            case 39: // Right
+                ++Board.currentPosition[0];
+                break;
+            case 40: // Down
+                if (!Board.keys[40]) {
+                    //Board.keys[40] = true;
+                    
+                    //clearTimeout(Board.dropTimeout);
+                    
+                    //Board.dropTimeout = setTimeout(dropCursor, Board.quickDropSpeed);
+                }
+                
+                
+                //dropCursor();
+                break;
+            default:
+                console.log(e.keyCode);
+                //Board.keys[e.keyCode] = true;
+                break;
+        }
+
+        
+    })
+
+    window.addEventListener('keyup', (e) =>
+    {
+        delete Board.keys[e.keyCode];
+        /*switch (e.keyCode) {
+            case 40:
+                delete Board.keys[40];
+                break;
+        }*/
     })
 
     Board.style = () =>
@@ -68,16 +117,20 @@
         Board.blockElement.style.height = (Board.sizeInPixels[1] / Board.size[1]) + "px";
     }
 
-    const createPiece = (x = 0, y = 0) =>
+    const createPiece = (piece = Board.currentPiece, x = Board.currentPosition[0], y = Board.currentPosition[1]) =>
     {
-        let piece = selectRandomPiece();
+        if (typeof piece == 'undefined') {
+            piece = Board.currentPiece;
+            if (typeof piece == 'undefined') {
+                piece = Board.currentPiece = selectRandomPiece();
+            }
+        }
 
         // Combine all colliding cells
         for(let dat of piece.data)
         {
             let cellX = x + dat[0]; let cellY = y + dat[1];
             Board.grid[cellX][cellY] = { ...Board.grid[cellX][cellY], piece };
-            console.log(Board.grid[cellX][cellY]);
         }
         
     }
@@ -108,18 +161,37 @@
         }
     }
 
+    const clearGrid = () =>
+    {
+        for (let yy=0; yy<Board.size[1]; ++yy) {
+            for (let xx=0; xx<Board.size[0]; ++xx) {
+                delete Board.grid[xx][yy].piece;
+            }
+        }
+    }
+
+    const quickMoveCursor = () => {
+        if (Board.keys[37]) { --Board.currentPosition[0]; }
+        if (Board.keys[39]) { ++Board.currentPosition[0]; }
+        if (Board.keys[40]) { ++Board.currentPosition[1]; }
+    }
+
     const dropCursor = () => {
-        ++Board.currentPosition[1];
+        if (!Board.keys[40]) { ++Board.currentPosition[1]; }
+
         if (Board.currentPosition[1] > 20) {
             Board.currentPosition[1] = 0;
             Board.currentPosition[0] = Math.floor(Math.random() * 7);
+            Board.currentPiece = selectRandomPiece();
         }
+        
+        // Board.dropTimeout = setTimeout(dropCursor, Board.currentDropSpeed);
     }
 
     const drawBoard = () =>
     {
-        initGrid();
-        createPiece(Board.currentPosition[0], Board.currentPosition[1]);
+        clearGrid();
+        createPiece();
 
         // Output grid contents as a filled or empty BlockChar
         for (let yy=0; yy<Board.size[1]; ++yy) {
