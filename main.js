@@ -4,9 +4,16 @@
         sizeInPixels: [320, 640],
         size: [10, 20],
         currentPosition: [3, 2],
+        currentPiece: undefined,
         backgroundColor: '#000',
-        standardDropSpeed: 1000,
-        quickDropSpeed: 100,
+        dropSpeed: {
+            current: 1000,
+            standard: 1000,
+            quick: 100,
+            recentlyPressed: false,
+            blockoutDuration: 300,
+            timer: undefined
+        },
         keys: {}
     }
 
@@ -56,13 +63,14 @@
         initGrid();
 
         requestAnimationFrame(drawBoard);
-        setInterval(dropCursor, Board.standardDropSpeed);
-        setInterval(quickMoveCursor, Board.quickDropSpeed);
+        Board.dropSpeed.timer = setTimeout(dropCursor, Board.dropSpeed.current);
+        //setInterval(dropCursor, Board.dropSpeed.standard);
+        //setInterval(quickMoveCursor, Board.dropSpeed.quick);
     })
 
     window.addEventListener('keydown', (e) =>
     {
-        Board.keys[e.keyCode] = true;
+        //Board.keys[e.keyCode] = true;
         switch (e.keyCode) {
             case 37: // Left
                 //--Board.currentPosition[0];
@@ -73,37 +81,42 @@
                 }
                 break;
             case 39: // Right
-                ++Board.currentPosition[0];
+                //++Board.currentPosition[0];
                 break;
             case 40: // Down
-                if (!Board.keys[40]) {
-                    //Board.keys[40] = true;
+                console.log('Press' + Board.dropSpeed.recentlyPressed);
+                if (!Board.keys[40] && !Board.dropSpeed.recentlyPressed) {
+                    //console.log('press');
+                    Board.dropSpeed.current = Board.dropSpeed.quick;
+
+                    Board.dropSpeed.recentlyPressed = true;
+                    setTimeout(
+                        function() { Board.dropSpeed.recentlyPressed = false },
+                        Board.dropSpeed.blockoutDuration );
+
+                    Board.keys[40] = true;
                     
-                    //clearTimeout(Board.dropTimeout);
-                    
-                    //Board.dropTimeout = setTimeout(dropCursor, Board.quickDropSpeed);
+                    clearTimeout(Board.dropSpeed.timer);
+                    dropCursor();
+                    //Board.dropSpeed.timer = setTimeout(dropCursor, Board.dropSpeed.quick);
                 }
-                
-                
-                //dropCursor();
                 break;
             default:
                 console.log(e.keyCode);
                 //Board.keys[e.keyCode] = true;
                 break;
         }
-
-        
     })
 
     window.addEventListener('keyup', (e) =>
     {
-        delete Board.keys[e.keyCode];
-        /*switch (e.keyCode) {
+        //delete Board.keys[e.keyCode];
+        switch (e.keyCode) {
             case 40:
                 delete Board.keys[40];
+                Board.dropSpeed.current = Board.dropSpeed.standard;
                 break;
-        }*/
+        }
     })
 
     Board.style = () =>
@@ -177,7 +190,8 @@
     }
 
     const dropCursor = () => {
-        if (!Board.keys[40]) { ++Board.currentPosition[1]; }
+        //if (!Board.keys[40]) { ++Board.currentPosition[1]; }
+        ++Board.currentPosition[1];
 
         if (Board.currentPosition[1] > 20) {
             Board.currentPosition[1] = 0;
@@ -185,7 +199,7 @@
             Board.currentPiece = selectRandomPiece();
         }
         
-        // Board.dropTimeout = setTimeout(dropCursor, Board.currentDropSpeed);
+        Board.dropSpeed.timer = setTimeout(dropCursor, Board.dropSpeed.current);
     }
 
     const drawBoard = () =>
