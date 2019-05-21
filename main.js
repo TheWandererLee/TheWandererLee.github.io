@@ -6,12 +6,14 @@
         currentPosition: [3, 2],
         currentPiece: undefined,
         backgroundColor: '#000',
-        dropSpeed: {
-            current: 1000,
-            standard: 1000,
-            quick: 100,
-            recentlyPressed: false,
-            blockoutDuration: 300,
+        dropper: {
+            speed: 1000,
+            standardSpeed: 800,
+            quickSpeed: 100,
+            timer: undefined
+        },
+        slider: {
+            speed: 150,
             timer: undefined
         },
         keys: {}
@@ -62,43 +64,31 @@
         Board.style();
         initGrid();
 
-        requestAnimationFrame(drawBoard);
-        Board.dropSpeed.timer = setTimeout(dropCursor, Board.dropSpeed.current);
-        //setInterval(dropCursor, Board.dropSpeed.standard);
-        //setInterval(quickMoveCursor, Board.dropSpeed.quick);
+        requestAnimationFrame(drawBoard); 
+        Board.dropper.timer = setInterval(dropCursor, Board.dropper.speed);
     })
 
     window.addEventListener('keydown', (e) =>
     {
         //Board.keys[e.keyCode] = true;
         switch (e.keyCode) {
-            case 37: // Left
-                //--Board.currentPosition[0];
-                if (!Board.keys[37]) {
-                    //clearTimeout(Board.dropTimeout);
-                    //Board.keys[37] = true;
-                    //Board.dropTimeout = setTimeout(dropCursor, Board.quickDropSpeed);
+            case 37: case 39: // Left, Right
+                if (!Board.keys[e.keyCode]) {
+                    Board.keys[e.keyCode] = true;
+                    //clearInterval(Board.slider.timer);
+                    slideCursor();
+                    Board.slider.timer = setInterval(slideCursor, Board.slider.speed);
                 }
                 break;
-            case 39: // Right
-                //++Board.currentPosition[0];
-                break;
             case 40: // Down
-                console.log('Press' + Board.dropSpeed.recentlyPressed);
-                if (!Board.keys[40] && !Board.dropSpeed.recentlyPressed) {
-                    //console.log('press');
-                    Board.dropSpeed.current = Board.dropSpeed.quick;
-
-                    Board.dropSpeed.recentlyPressed = true;
-                    setTimeout(
-                        function() { Board.dropSpeed.recentlyPressed = false },
-                        Board.dropSpeed.blockoutDuration );
+                if (!Board.keys[40]) { // Prevent duplicate keydown
 
                     Board.keys[40] = true;
                     
-                    clearTimeout(Board.dropSpeed.timer);
+                    clearInterval(Board.dropper.timer);
                     dropCursor();
-                    //Board.dropSpeed.timer = setTimeout(dropCursor, Board.dropSpeed.quick);
+                    Board.dropper.speed = Board.dropper.quickSpeed;
+                    Board.dropper.timer = setInterval(dropCursor, Board.dropper.speed);
                 }
                 break;
             default:
@@ -112,9 +102,23 @@
     {
         //delete Board.keys[e.keyCode];
         switch (e.keyCode) {
+            case 37: case 39:
+                delete Board.keys[e.keyCode];
+
+               
+                        clearInterval(Board.slider.timer);
+
+                        if (typeof Board.keys[37] != 'undefined' ||
+                        typeof Board.keys[39] != 'undefined') {
+                            Board.slider.timer = setInterval(Board.slideCursor, Board.slider.speed);
+                        }
+                break;
             case 40:
                 delete Board.keys[40];
-                Board.dropSpeed.current = Board.dropSpeed.standard;
+
+                Board.dropper.speed = Board.dropper.standardSpeed;
+                clearInterval(Board.dropper.timer);
+                Board.dropper.timer = setInterval(dropCursor, Board.dropper.speed);
                 break;
         }
     })
@@ -183,12 +187,6 @@
         }
     }
 
-    const quickMoveCursor = () => {
-        if (Board.keys[37]) { --Board.currentPosition[0]; }
-        if (Board.keys[39]) { ++Board.currentPosition[0]; }
-        if (Board.keys[40]) { ++Board.currentPosition[1]; }
-    }
-
     const dropCursor = () => {
         //if (!Board.keys[40]) { ++Board.currentPosition[1]; }
         ++Board.currentPosition[1];
@@ -198,8 +196,25 @@
             Board.currentPosition[0] = Math.floor(Math.random() * 7);
             Board.currentPiece = selectRandomPiece();
         }
-        
-        Board.dropSpeed.timer = setTimeout(dropCursor, Board.dropSpeed.current);
+    }
+    const slideCursor = () => {
+        let previousPosition = Board.currentPosition[0];
+        if (Board.keys[37]) { --Board.currentPosition[0]; }
+        if (Board.keys[39]) { ++Board.currentPosition[0]; }
+
+        for(let dat of Board.currentPiece.data)
+        {
+            let cellX = Board.currentPosition[0] + dat[0];
+            let cellY = Board.currentPosition[1] + dat[1];
+
+            // Block collides with wall
+            if (cellX < 0 || cellX >= Board.size[0] ||
+                typeof Board.grid.piece != 'undefined')
+            {
+                Board.currentPosition[0] = previousPosition;
+                break;
+            }
+        }
     }
 
     const drawBoard = () =>
