@@ -1,6 +1,6 @@
 // Recursive way to find a path where numbers add up to a specified number.
 // No globals or loops used. https://stackoverflow.com/a/56402199/5514077
-public class Main
+public class RecursiveSumPathFinder
 {
 	public static void main(String[] args) 
     {
